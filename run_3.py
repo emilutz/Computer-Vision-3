@@ -47,10 +47,10 @@ def load_validation():
 
 #=====[ HYPER-PARAMETERS ]=====#
 
-BATCH_SIZE = 8
-EPOCHS     = 2
+BATCH_SIZE = 32
+EPOCHS     = 300
 
-VALIDATION_BATCH = 16
+VALIDATION_BATCH = 32
 
 #==============================#
 
@@ -60,7 +60,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 vgg_params = load_weights(os.path.join('run_3_data', 'vgg_data', 'vgg16_weights.npz'))
 val_images, val_labels = load_validation()
-
+# sys.exit()
 
 with tf.device('/cpu:0'):
 
@@ -199,7 +199,6 @@ with tf.device('/gpu:0'):
 
 		conv = tf.nn.conv2d(activated3_2, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
-		to_test = out
 		activated3_3 = tf.nn.relu(out, name='out')
 
 
@@ -210,46 +209,182 @@ with tf.device('/gpu:0'):
                            name='pool3')
 
 
-	#==================================[ DENSE 1 ]==================================#
+	#==================================[ CONV 4 ]==================================#
 
 
-	img_shape = pool3.get_shape()
-	dense1_shape = int(np.prod(pool3.get_shape()[1:]))
+	with tf.variable_scope('conv4_1') as scope:
 
-	pool3_flat = tf.reshape(pool3, [-1, dense1_shape])
+		conv_weights = vgg_params['conv4_1_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
 
-	with tf.variable_scope('fc1') as scope:
+		conv_biases = vgg_params['conv4_1_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
 
+		conv = tf.nn.conv2d(pool3, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated4_1 = tf.nn.relu(out, name='out')
+
+
+	with tf.variable_scope('conv4_2') as scope:
+
+		conv_weights = vgg_params['conv4_2_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+
+		conv_biases = vgg_params['conv4_2_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+
+		conv = tf.nn.conv2d(activated4_1, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated4_2 = tf.nn.relu(out, name='out')
+
+
+	with tf.variable_scope('conv4_3') as scope:
+
+		conv_weights = vgg_params['conv4_3_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+
+		conv_biases = vgg_params['conv4_3_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+
+		conv = tf.nn.conv2d(activated4_2, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated4_3 = tf.nn.relu(out, name='out')
+
+
+	pool4 = tf.nn.max_pool(activated4_3,
+                           ksize=[1, 2, 2, 1],
+                           strides=[1, 2, 2, 1],
+                           padding='SAME',
+                           name='pool4')
+
+
+	#==================================[ CONV 5 ]==================================#
+
+
+	with tf.variable_scope('conv5_1') as scope:
+
+		conv_weights = vgg_params['conv5_1_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+
+		conv_biases = vgg_params['conv5_1_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+
+		conv = tf.nn.conv2d(pool4, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated5_1 = tf.nn.relu(out, name='out')
+
+
+	with tf.variable_scope('conv5_2') as scope:
+
+		conv_weights = vgg_params['conv5_2_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+
+		conv_biases = vgg_params['conv5_2_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+
+		conv = tf.nn.conv2d(activated5_1, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated5_2 = tf.nn.relu(out, name='out')
+
+
+	with tf.variable_scope('conv5_3') as scope:
+
+		conv_weights = vgg_params['conv5_3_W']
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+
+		conv_biases = vgg_params['conv5_3_b']
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+
+		conv = tf.nn.conv2d(activated5_2, kernel, [1, 1, 1, 1], padding='SAME')
+		out = tf.nn.bias_add(conv, biases)
+		activated5_3 = tf.nn.relu(out, name='out')
+
+
+	pool5 = tf.nn.max_pool(activated5_3,
+                           ksize=[1, 2, 2, 1],
+                           strides=[1, 2, 2, 1],
+                           padding='SAME',
+                           name='pool5')
+
+	to_test = pool5
+
+
+with tf.device('/cpu:0'):
+
+
+	#==================================[ DENSE 6 ]==================================#
+
+
+	img_shape = pool5.get_shape()
+	dense6_shape = int(np.prod(pool5.get_shape()[1:]))
+
+	pool5_flat = tf.reshape(pool5, [-1, dense6_shape])
+
+	with tf.variable_scope('fc6') as scope:
+
+		vgg_weights = vgg_params['fc6_W']
 		weights = tf.get_variable(name='weights', trainable=True,
-			                      initializer=tf.truncated_normal([dense1_shape, 64],
-		                                                          dtype=tf.float32,
-		                                                          mean=0,
-		                                                          stddev=1e-1))
+			                      initializer=vgg_weights)
+
+		vgg_biases = vgg_params['fc6_b']
 		biases = tf.get_variable(name='biases', trainable=True,
-			                     initializer=tf.constant(1.0,
-		                                                 shape=[64],
-		                                                 dtype=tf.float32))
+			                     initializer=vgg_biases)
 
-		dense1 = tf.nn.bias_add(tf.matmul(pool3_flat, weights), biases)
-		activated1 = tf.nn.relu(dense1, name='out')
+		dense6 = tf.nn.bias_add(tf.matmul(pool5_flat, weights), biases)
+		activated6 = tf.nn.relu(dense6, name='out')
 
 
-	#==================================[ DENSE 2 ]==================================#
+	#==================================[ DENSE 7 ]==================================#
 
 
-	with tf.variable_scope('fc2') as scope:
+	with tf.variable_scope('fc7') as scope:
+
+		vgg_weights = vgg_params['fc7_W']
+		weights = tf.get_variable(name='weights', trainable=True,
+			                      initializer=vgg_weights)
+
+		vgg_biases = vgg_params['fc7_b']
+		biases = tf.get_variable(name='biases', trainable=True,
+			                     initializer=vgg_biases)
+
+		dense7 = tf.nn.bias_add(tf.matmul(activated6, weights), biases)
+		activated7 = tf.nn.relu(dense7, name='out')
+
+
+	#==================================[ DENSE 8 ]==================================#
+
+
+	with tf.variable_scope('fc8') as scope:
+
+		vgg_weights = vgg_params['fc8_W']
+		weights = tf.get_variable(name='weights', trainable=True,
+			                      initializer=vgg_weights)
+
+		vgg_biases = vgg_params['fc8_b']
+		biases = tf.get_variable(name='biases', trainable=True,
+			                     initializer=vgg_biases)
+
+		dense8 = tf.nn.bias_add(tf.matmul(activated7, weights), biases)
+		activated8 = tf.nn.relu(dense8, name='out')
+
+
+	#==================================[ DENSE 9 ]==================================#
+
+
+	with tf.variable_scope('fc9') as scope:
 
 		weights = tf.get_variable(name='weights', trainable=True,
-			                      initializer=tf.truncated_normal([64, CLASSES],
+			                      initializer=tf.truncated_normal([1000, CLASSES],
 		                                                          dtype=tf.float32,
 		                                                          mean=0,
 		                                                          stddev=1e-1))
+
 		biases = tf.get_variable(name='biases', trainable=True,
 			                     initializer=tf.constant(1.0,
 		                                                 shape=[CLASSES],
 		                                                 dtype=tf.float32))
 
-		logits = tf.nn.bias_add(tf.matmul(activated1, weights), biases)
+		logits = tf.nn.bias_add(tf.matmul(activated8, weights), biases)
 
 
 	loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits))
@@ -257,6 +392,11 @@ with tf.device('/gpu:0'):
 	optimizer = tf.train.AdadeltaOptimizer(learning_rate=1e-3)
 
 	train_op = optimizer.minimize(loss)
+
+
+
+# Add ops to save and restore all the variables.
+saver = tf.train.Saver()
 
 
 # Create the graph, etc.
@@ -273,82 +413,85 @@ sess.run(init_op)
 coord = tf.train.Coordinator()
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
+
 # Collect data for Tensorboard
 with tf.device('/cpu:0'):
 
-	tf.summary.image('act_1', activated1_1[:,:,:,:3])
-	tf.summary.image('act_2', activated1_2[:,:,:,:3])
+	tf.summary.image('conv_1', activated1_2[:,:,:,:3])
+	tf.summary.image('conv_2', activated2_2[:,:,:,:3])
+	tf.summary.image('conv_3', activated3_3[:,:,:,:3])
+	tf.summary.image('conv_4', activated4_3[:,:,:,:3])
+	tf.summary.image('conv_5', activated5_3[:,:,:,:3])
 	tf.summary.scalar('loss', loss)
 
 	merged = tf.summary.merge_all()
 	train_writer = tf.summary.FileWriter('run_3_tensorboard', sess.graph)
 
 
-step = 0
-try:
-	while not coord.should_stop():
-		# Run training steps or whatever
-		step += 1
-		print(step, flush=True)
+if __name__ == '__main__':
+    
+	if len(sys.argv) > 1:
+		if sys.argv[1] == 'restore':
+			print('Restoring model', flush=True)
+			saver.restore(sess, "./model/model.ckpt")
 
-		feed_dict = {
-			is_training : True,
-			images_tst : val_images[:VALIDATION_BATCH],
-			labels_tst : val_labels[:VALIDATION_BATCH]
-		}
-		_, summary, training_loss, tt_img = \
-		    sess.run([train_op, merged, loss, to_test], feed_dict=feed_dict)
+	step = 0
+	try:
+		while not coord.should_stop():
+			# Run training steps or whatever
+			step += 1
+			print("Step " + str(step), flush=True)
 
-		train_writer.add_summary(summary, step)
-		print('Training Loss   : {0:.2f}'.format(training_loss))
+			feed_dict = {
+				is_training : True,
+				images_tst : val_images[:VALIDATION_BATCH],
+				labels_tst : val_labels[:VALIDATION_BATCH]
+			}
+			_, summary, training_loss, tt_img = \
+			    sess.run([train_op, merged, loss, to_test], feed_dict=feed_dict)
 
-		min_t = np.min(tt_img[0])
-		max_t = np.max(tt_img[0])
-		mean_t = np.mean(tt_img[0])
-
-		print('mean : ', mean_t)
-		print('std : ', np.std(tt_img[0]))
-		print('min : ', min_t)
-		print('max : ', max_t)
-
-		plt.imshow((tt_img[0,:,:,:3] - min_t) / (max_t - min_t), cmap='gray')
-		plt.show()
-
-		if step % 20 == 0:
-
-			validation_loss = 0
-			validation_wrong = 0
-			validation_total = 0
-			for s in range(0, len(val_images), VALIDATION_BATCH):
-				try:
-					# print(s / len(val_images))
-					feed_dict = {
-						is_training : False,
-						images_tst : val_images[s : s + VALIDATION_BATCH],
-						labels_tst : val_labels[s : s + VALIDATION_BATCH]
-					}
-					val_loss, true, pred = sess.run([loss, labels, logits], feed_dict=feed_dict)
-				
-					validation_loss += val_loss
-					validation_total += len(true)
-					validation_wrong += np.count_nonzero(
-						np.argmax(true[:,0,:], axis=1) - np.argmax(pred, axis=1))
-
-				except ValueError:
-					pass
-
-			validation_loss /= len(val_images) // VALIDATION_BATCH
-			print('Validation Loss : {0:.2f}'.format(validation_loss))
-			print('Validation Accuracy : {0:.2f}%'.format(100 - 
-				(validation_wrong / validation_total) * 100))
+			train_writer.add_summary(summary, step)
+			print('Training Loss   : {0:.2f}'.format(training_loss))
 
 
-except tf.errors.OutOfRangeError:
-	print('\nDone training -- epoch limit reached\n')
-finally:
-	# When done, ask the threads to stop.
-	coord.request_stop()
+			if step % 25 == 0:
 
-# Wait for threads to finish.
-coord.join(threads)
-sess.close()
+				validation_loss = 0
+				validation_wrong = 0
+				validation_total = 0
+				for s in range(0, len(val_images), VALIDATION_BATCH):
+					try:
+						# print(s / len(val_images))
+						feed_dict = {
+							is_training : False,
+							images_tst : val_images[s : s + VALIDATION_BATCH],
+							labels_tst : val_labels[s : s + VALIDATION_BATCH]
+						}
+						val_loss, true, pred = sess.run([loss, labels, logits], feed_dict=feed_dict)
+					
+						validation_loss += val_loss
+						validation_total += len(true)
+						validation_wrong += np.count_nonzero(
+							np.argmax(true[:,0,:], axis=1) - np.argmax(pred, axis=1))
+
+					except ValueError:
+						pass
+
+				validation_loss /= len(val_images) // VALIDATION_BATCH
+				print('Validation Loss : {0:.2f}'.format(validation_loss))
+				print('Validation Accuracy : {0:.2f}%'.format(100 - 
+					(validation_wrong / validation_total) * 100))
+
+				save_path = saver.save(sess, "./model/model.ckpt")
+				print("Model saved in file: %s" % save_path)
+
+
+	except tf.errors.OutOfRangeError:
+		print('\nDone training -- epoch limit reached\n')
+	finally:
+		# When done, ask the threads to stop.
+		coord.request_stop()
+
+	# Wait for threads to finish.
+	coord.join(threads)
+	sess.close()
