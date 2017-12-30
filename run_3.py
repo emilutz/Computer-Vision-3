@@ -45,10 +45,27 @@ def load_validation():
 	return (val_images, val_labels)
 
 
+def load_test():
+	images = os.listdir(os.path.join('run_3_data', 'raw_data', 'test'))
+	val_images = np.empty((len(images), IMG_SIZE, IMG_SIZE, 1), dtype=np.uint8)
+
+	counter = 0
+	for imgname in images:
+		img = cv2.imread(os.path.join(
+			'run_3_data', 'raw_data', 'test', imgname), 0)
+		val_images[counter] = img.reshape((IMG_SIZE, IMG_SIZE, 1))
+		counter += 1
+
+	val_labels = np.load(os.path.join(
+		'run_3_data', 'raw_data', 'test_labels.dat'))
+
+	return (val_images, val_labels)
+
+
 #=====[ HYPER-PARAMETERS ]=====#
 
 BATCH_SIZE = 32
-EPOCHS     = 300
+EPOCHS     = 1000
 
 VALIDATION_BATCH = 32
 
@@ -69,6 +86,11 @@ with tf.device('/cpu:0'):
 	# testing data
 	images_tst = tf.placeholder(tf.uint8, shape=[VALIDATION_BATCH, IMG_SIZE, IMG_SIZE, 1])
 	labels_tst = tf.placeholder(tf.int32, shape=[VALIDATION_BATCH, 1])
+	# dropout probability
+	prob = tf.placeholder_with_default(1.0, shape=())
+
+	# rotation angle
+	angle = tf.placeholder(tf.float32, shape=[1], name='rotation_angle')
 
 	# read training data from queues
 	images_trn, labels_trn = inputs('training', BATCH_SIZE, EPOCHS)
@@ -79,8 +101,13 @@ with tf.device('/cpu:0'):
 
 	# subtract the mean
 	images = (tf.cast(images, tf.float32) - 127.5)
+
+	# rotate the images
+	images = tf.contrib.image.rotate(images, angle)
+
 	# channelize images
 	images = tf.image.grayscale_to_rgb(images)
+
 	# encode labels using one hot
 	labels = tf.one_hot(labels, CLASSES)
 
@@ -90,6 +117,7 @@ with tf.device('/gpu:0'):
 
 	#==================================[ CONV 1 ]==================================#
 
+	to_test = images
 
 	with tf.variable_scope('conv1_1') as scope:
 
@@ -306,8 +334,6 @@ with tf.device('/gpu:0'):
                            padding='SAME',
                            name='pool5')
 
-	to_test = pool5
-
 
 with tf.device('/cpu:0'):
 
@@ -333,6 +359,8 @@ with tf.device('/cpu:0'):
 		dense6 = tf.nn.bias_add(tf.matmul(pool5_flat, weights), biases)
 		activated6 = tf.nn.relu(dense6, name='out')
 
+		drop6 = tf.nn.dropout(activated6, prob, name='drop6')
+
 
 	#==================================[ DENSE 7 ]==================================#
 
@@ -347,8 +375,10 @@ with tf.device('/cpu:0'):
 		biases = tf.get_variable(name='biases', trainable=True,
 			                     initializer=vgg_biases)
 
-		dense7 = tf.nn.bias_add(tf.matmul(activated6, weights), biases)
+		dense7 = tf.nn.bias_add(tf.matmul(drop6, weights), biases)
 		activated7 = tf.nn.relu(dense7, name='out')
+
+		drop7 = tf.nn.dropout(activated7, prob, name='drop7')
 
 
 	#==================================[ DENSE 8 ]==================================#
@@ -364,7 +394,7 @@ with tf.device('/cpu:0'):
 		biases = tf.get_variable(name='biases', trainable=True,
 			                     initializer=vgg_biases)
 
-		dense8 = tf.nn.bias_add(tf.matmul(activated7, weights), biases)
+		dense8 = tf.nn.bias_add(tf.matmul(drop7, weights), biases)
 		activated8 = tf.nn.relu(dense8, name='out')
 
 
@@ -422,10 +452,11 @@ with tf.device('/cpu:0'):
 	tf.summary.image('conv_3', activated3_3[:,:,:,:3])
 	tf.summary.image('conv_4', activated4_3[:,:,:,:3])
 	tf.summary.image('conv_5', activated5_3[:,:,:,:3])
+	tf.summary.histogram('logits hist', logits)
 	tf.summary.scalar('loss', loss)
 
 	merged = tf.summary.merge_all()
-	train_writer = tf.summary.FileWriter('run_3_tensorboard', sess.graph)
+	train_writer = tf.summary.FileWriter('run_3_tensorboard_between_years', sess.graph)
 
 
 if __name__ == '__main__':
@@ -433,17 +464,24 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		if sys.argv[1] == 'restore':
 			print('Restoring model', flush=True)
-			saver.restore(sess, "./model/model.ckpt")
+			saver.restore(sess, "./model_between_years/model.ckpt")
 
+	best_loss = 9999
 	step = 0
 	try:
 		while not coord.should_stop():
-			# Run training steps or whatever
+
+			# run training steps or whatever
 			step += 1
 			print("Step " + str(step), flush=True)
 
+			# generate rotation angle
+			rotation_angle = np.asarray([np.random.normal(0, 0.08)])
+
 			feed_dict = {
 				is_training : True,
+				angle : rotation_angle,
+				prob  : 0.5,
 				images_tst : val_images[:VALIDATION_BATCH],
 				labels_tst : val_labels[:VALIDATION_BATCH]
 			}
@@ -452,7 +490,6 @@ if __name__ == '__main__':
 
 			train_writer.add_summary(summary, step)
 			print('Training Loss   : {0:.2f}'.format(training_loss))
-
 
 			if step % 25 == 0:
 
@@ -464,6 +501,7 @@ if __name__ == '__main__':
 						# print(s / len(val_images))
 						feed_dict = {
 							is_training : False,
+							angle : np.asarray([0]),
 							images_tst : val_images[s : s + VALIDATION_BATCH],
 							labels_tst : val_labels[s : s + VALIDATION_BATCH]
 						}
@@ -482,8 +520,10 @@ if __name__ == '__main__':
 				print('Validation Accuracy : {0:.2f}%'.format(100 - 
 					(validation_wrong / validation_total) * 100))
 
-				save_path = saver.save(sess, "./model/model.ckpt")
-				print("Model saved in file: %s" % save_path)
+				if validation_loss < best_loss:
+					best_loss = validation_loss
+					save_path = saver.save(sess, "./model_between_years/model.ckpt")
+					print("Model saved in file: %s" % save_path)
 
 
 	except tf.errors.OutOfRangeError:

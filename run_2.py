@@ -8,6 +8,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
 from sklearn import svm
 from scipy import spatial
+from results_writer import write_results 
 
 
 label_dict = {}
@@ -135,32 +136,21 @@ def randomize_data(features_data, labels):
 
 def predict_on_test(patch_size, stride, clusterer, clusters, clf):
 
-	TEST_SIZE = 2985
-	counter = 0
-	X_test = np.empty((TEST_SIZE, clusters))
+	TEST_SIZE = 2988
+	prediction_tuples = []
 
 	# clustering for features
-	for image_index in range(2988):
+	for image_index in range(TEST_SIZE):
 		try:
 			imgname = '%d.jpg' % image_index
 			img = cv2.imread(os.path.join('testing', imgname), 0)
 		 
-			X_test[counter] = feature_vector(img, patch_size, stride, clusterer, clusters)
-			counter += 1
+			prediction_tuples.append((image_index, clf.predict(feature_vector(img, patch_size, stride, clusterer, clusters))[0]))
 		except AttributeError:
-			pass 
+			pass
 
-	# classify the images
-	predictions = clf.predict(X_test)
-
-	reverse_label_dict = {}
-	for key, value in label_dict.items():
-		reverse_label_dict[value] = key
-
-	# serialize the results
-	with open('run_2.txt', 'w') as f:
-		for pred in predictions:
-			f.write(str(reverse_label_dict[pred]) + '\n')
+	# write the results
+	write_results(prediction_tuples)
 
 
 #====================[ MAIN FLOW ]====================#
@@ -232,9 +222,4 @@ if __name__ == '__main__':
 	print('Test accuracy     : {0:.2f}%\n'.format(test_accuracy), flush=True)
 
 	predict_on_test(patch_size, stride, clusterer, clusters, clf)
-	sys.exit()
-
 	print('Done !', flush=True)
-
-
-
