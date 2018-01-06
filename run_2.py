@@ -200,11 +200,6 @@ if __name__ == '__main__':
 	print('Creating training set for SVM...', flush=True)
 	X_svm, y_svm = read_and_convert_data(0, training_images_number, patch_size, stride, clusterer, clusters)
 
-	# for x in X_svm:
-	# 	print(x)
-	# 	plt.bar(list(range(clusters)), x, width=0.5)
-	# 	plt.show()
-
 	print('Randomizing data...', flush=True)
 	X_svm, y_svm = randomize_data(X_svm, y_svm)
 

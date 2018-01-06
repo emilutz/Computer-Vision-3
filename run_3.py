@@ -15,7 +15,6 @@ label_to_class = {}
 
 def set_label_dictionaries():
 	counter = 0
-	global label_dict
 	for classname in os.listdir('training'):
 		class_to_label[classname] = counter
 		label_to_class[counter] = classname
@@ -122,10 +121,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv1_1') as scope:
 
 		conv_weights = vgg_params['conv1_1_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv1_1_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(images, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -135,10 +134,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv1_2') as scope:
 
 		conv_weights = vgg_params['conv1_2_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv1_2_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated1_1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -158,10 +157,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv2_1') as scope:
 
 		conv_weights = vgg_params['conv2_1_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv2_1_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(pool1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -171,10 +170,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv2_2') as scope:
 
 		conv_weights = vgg_params['conv2_2_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv2_2_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated2_1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -194,10 +193,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv3_1') as scope:
 
 		conv_weights = vgg_params['conv3_1_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv3_1_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(pool2, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -207,10 +206,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv3_2') as scope:
 
 		conv_weights = vgg_params['conv3_2_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv3_2_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated3_1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -220,10 +219,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv3_3') as scope:
 
 		conv_weights = vgg_params['conv3_3_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv3_3_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated3_2, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -243,10 +242,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv4_1') as scope:
 
 		conv_weights = vgg_params['conv4_1_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv4_1_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(pool3, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -256,10 +255,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv4_2') as scope:
 
 		conv_weights = vgg_params['conv4_2_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv4_2_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated4_1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -269,10 +268,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv4_3') as scope:
 
 		conv_weights = vgg_params['conv4_3_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv4_3_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated4_2, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -292,10 +291,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv5_1') as scope:
 
 		conv_weights = vgg_params['conv5_1_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv5_1_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(pool4, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -305,10 +304,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv5_2') as scope:
 
 		conv_weights = vgg_params['conv5_2_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv5_2_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated5_1, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -318,10 +317,10 @@ with tf.device('/gpu:0'):
 	with tf.variable_scope('conv5_3') as scope:
 
 		conv_weights = vgg_params['conv5_3_W']
-		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32)
+		kernel = tf.get_variable('weights', initializer=conv_weights, dtype=tf.float32, trainable=False)
 
 		conv_biases = vgg_params['conv5_3_b']
-		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32)
+		biases = tf.get_variable('biases', initializer=conv_biases, dtype=tf.float32, trainable=False)
 
 		conv = tf.nn.conv2d(activated5_2, kernel, [1, 1, 1, 1], padding='SAME')
 		out = tf.nn.bias_add(conv, biases)
@@ -335,7 +334,7 @@ with tf.device('/gpu:0'):
                            name='pool5')
 
 
-with tf.device('/cpu:0'):
+with tf.device('/gpu:0'):
 
 
 	#==================================[ DENSE 6 ]==================================#
@@ -349,11 +348,11 @@ with tf.device('/cpu:0'):
 	with tf.variable_scope('fc6') as scope:
 
 		vgg_weights = vgg_params['fc6_W']
-		weights = tf.get_variable(name='weights', trainable=True,
+		weights = tf.get_variable(name='weights', trainable=False,
 			                      initializer=vgg_weights)
 
 		vgg_biases = vgg_params['fc6_b']
-		biases = tf.get_variable(name='biases', trainable=True,
+		biases = tf.get_variable(name='biases', trainable=False,
 			                     initializer=vgg_biases)
 
 		dense6 = tf.nn.bias_add(tf.matmul(pool5_flat, weights), biases)
@@ -368,11 +367,11 @@ with tf.device('/cpu:0'):
 	with tf.variable_scope('fc7') as scope:
 
 		vgg_weights = vgg_params['fc7_W']
-		weights = tf.get_variable(name='weights', trainable=True,
+		weights = tf.get_variable(name='weights', trainable=False,
 			                      initializer=vgg_weights)
 
 		vgg_biases = vgg_params['fc7_b']
-		biases = tf.get_variable(name='biases', trainable=True,
+		biases = tf.get_variable(name='biases', trainable=False,
 			                     initializer=vgg_biases)
 
 		dense7 = tf.nn.bias_add(tf.matmul(drop6, weights), biases)
@@ -456,7 +455,7 @@ with tf.device('/cpu:0'):
 	tf.summary.scalar('loss', loss)
 
 	merged = tf.summary.merge_all()
-	train_writer = tf.summary.FileWriter('run_3_tensorboard_between_years', sess.graph)
+	train_writer = tf.summary.FileWriter('run_3_tensorboard_pure', sess.graph)
 
 
 if __name__ == '__main__':
@@ -491,7 +490,7 @@ if __name__ == '__main__':
 			train_writer.add_summary(summary, step)
 			print('Training Loss   : {0:.2f}'.format(training_loss))
 
-			if step % 25 == 0:
+			if step % 250 == 0:
 
 				validation_loss = 0
 				validation_wrong = 0
@@ -522,7 +521,7 @@ if __name__ == '__main__':
 
 				if validation_loss < best_loss:
 					best_loss = validation_loss
-					save_path = saver.save(sess, "./model_between_years/model.ckpt")
+					save_path = saver.save(sess, "./model_pure/model.ckpt")
 					print("Model saved in file: %s" % save_path)
 
 
